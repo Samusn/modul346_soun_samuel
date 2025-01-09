@@ -1,0 +1,65 @@
+#cloud-config
+users:
+  - name: ubuntu
+    sudo: ALL=(ALL) NOPASSWD:ALL
+    groups: users, admin
+    home: /home/ubuntu
+    shell: /bin/bash
+    ssh_authorized_keys:
+      - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQChzvQqLz+DEndAH6H1C+EDh1Q5tsVoxOaotFgRpfm6qcSg+h+d7ZJddt6tUz4Mo3v78ulJA9MohEOxTfRWswp5551oVDkw31nIcVOBNPFphXscvaHogco/yb5N/vTSeWpEvubzzxbcZau8OxvS4OI8zouUcNJHnXmB76+psJWFsLxYsOdtR+5NPAOnNgQjGTVUyk9ytGxGIeNdKC2xjYOD+omG+aAQPtVWgw6i+jzQHRiWjtIbNXf0W3c7/Fi1bV2NCuq9RLmJsAEtiVgl4PVZfnY8nQ4zy8mex/ntYdoTXgDHQ/UAdB1nFc7t2vSCB3zTkXLA3wcXLLks+2K3JEh1 samuel.soun@lernende.bbw.ch
+      - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC0WGP1EZykEtv5YGC9nMiPFW3U3DmZNzKFO5nEu6uozEHh4jLZzPNHSrfFTuQ2GnRDSt+XbOtTLdcj26+iPNiFoFha42aCIzYjt6V8Z+SQ9pzF4jPPzxwXfDdkEWylgoNnZ+4MG1lNFqa8aO7F62tX0Yj5khjC0Bs7Mb2cHLx1XZaxJV6qSaulDuBbLYe8QUZXkMc7wmob3PM0kflfolR3LE7LResIHWa4j4FL6r5cQmFlDU2BDPpKMFMGUfRSFiUtaWBNXFOWHQBC2+uKmuMPYP4vJC9sBgqMvPN/X2KyemqdMvdKXnCfrzadHuSSJYEzD64Cve5Zl9yVvY4AqyBD NUY-key
+ssh_pwauth: false
+disable_root: false
+package_update: true
+packages:
+  - apache2
+  - php
+  - libapache2-mod-php
+  - adminer
+  - curl
+  - wget
+
+write_files:
+  - path: /var/www/html/info.php
+    content: |
+      <?php
+
+      // Show all information, defaults to INFO_ALL
+      phpinfo();
+
+      ?>
+  - path: /var/www/html/db.php
+    content: |
+      <html>
+      <head></head>
+      <body>
+      Diese Seite macht eine Abfrage auf die Datenbank. <br />
+      Das ausgeführte Query ist: <i>select Host, User from mysql.user;</i><br /><br />
+      Das Resultat: <br />
+      <?php
+              //database
+              $servername = "172.31.32.30";
+              $username = "admin";
+              $password = "password";
+              $dbname = "mysql";
+
+              // Create connection
+              $conn = new mysqli($servername, $username, $password, $dbname);
+              // Check connection
+              if ($conn->connect_error) {
+                      die("Connection failed: " . $conn->connect_error);
+              }
+
+              $sql = "select Host, User from mysql.user;";
+              $result = $conn->query($sql);
+              while($row = $result->fetch_assoc()){
+                      echo("<li>" . $row["Host"] . " / " . $row["User"] . "</li>");
+              }
+              //var_dump($result);
+      ?>
+      </body>
+      </html>
+
+runcmd:
+  - sudo a2enconf adminer
+  - sudo systemctl restart apache2
